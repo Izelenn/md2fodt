@@ -21,4 +21,4 @@ md2fodt accepts an extended Marddown syntax :
 
 ## Special features
 
-md2fodt also implements smart dashes and quotes, and adds non-breaking spaces in french text when needed. Other parameters, like page size or font faces, can be modified in the <mono>header.xml</code> file.
+md2fodt also implements smart dashes and quotes, and adds non-breaking spaces in french text when needed. Other parameters, like page size or font faces, can be modified in the <code>header.xml</code> file.
