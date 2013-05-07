@@ -14,7 +14,10 @@ md2fodt accepts an extended Marddown syntax :
   * 21&lt;<sup>st</sup>&gt;
   * CO&gt;<sub>2</sub>&lt;
   * + SMALL CAPS +
-  * ~<code>Code block with different margin and alignment</code>
+  * ~<code>Code block with different margin and alignment :<br>
+  for (i = 0 ; i < n ; i++) {<br>
+  &emsp;&emsp;do_some_stuff(i, n);<br>
+  }</code>~
 
 ## Special features
 
