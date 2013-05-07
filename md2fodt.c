@@ -1,10 +1,28 @@
 #include <stdio.h>
 #include "fodt.h"
 
+char c2s[2] = {0, 0};
+
 int is_special(char c) {
 	if ((c == '!') || (c == '?') || (c == ':') || (c == ';'))
 		return 1;
 	return 0;
+}
+
+char * xmlify(char c) {
+	switch(c) {
+		case '&' :
+			return "&amp;";
+		case '<' :
+			return "&lt;";
+		case '>' :
+			return "&gt;";
+		case '\t' :
+			return "<text:tab/>";
+		default :
+			c2s[0] = c;
+			return c2s;
+	}
 }
 
 void process(FILE * input, FILE * output) {
@@ -21,8 +39,9 @@ void process(FILE * input, FILE * output) {
 		int last_was_break;
 		int last_was_space;
 		int paragraph;
+		int code;
 		int ignore_next;
-	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	char current, next;
 	// Copy XML header
 	FILE * header = fopen(HEADER, "r");
@@ -32,16 +51,31 @@ void process(FILE * input, FILE * output) {
 	// Processing loop
 	while ((current = (char)fgetc_unlocked(input)) != '#');
 	while ((next = (char)fgetc_unlocked(input)) != EOF) {
+	// Ignore next character after some commands
 		if (state.ignore_next) {
 			state.ignore_next = 0;
 			current = next;
 			continue;
 		}
+		// Copy code blocks verbatim instead of interpreting Markdown
+		if (state.code) {
+			if (current == '~')
+				state.code = 0;
+			else if (current == '\n') {
+				fputs_unlocked(PARAGRAPH_END_TAG, output);
+				fputs_unlocked(CODE_START_TAG, output);
+			}
+			else
+				fputs_unlocked(xmlify(current));
+			current = next;
+			continue;
+		}
+		// Markdown processor
 		switch (current) {
 		case '*' :	// Italic & bold
 			if (next == '*') {
-				state.bold = state.bold ? 0 : 1;
 				fputs_unlocked(state.bold ? SPAN_END_TAG : BOLD_START_TAG, output);
+				state.bold = state.bold ? 0 : 1;
 				state.ignore_next = 1;
 			} else {
 				fputs_unlocked(state.italic ? SPAN_END_TAG : ITALIC_START_TAG, output);
@@ -75,16 +109,15 @@ void process(FILE * input, FILE * output) {
 				fputs_unlocked(TITLE_START_TAG[state.title_level - 1], output);
 				state.paragraph = 1;
 			}
-			if (next == ' ')
-				state.ignore_next = 1;
 			break;
 		case '~' :	// Code block
 			if (!state.paragraph) {
 				fputs_unlocked(CODE_START_TAG, output);
 				state.paragraph = 1;
+				state.code = 1;
 			}
 			break;
-		case '\n' :	// Line break
+		case '\n' :	// Line break : new paragraph
 			state.last_was_break = 1;
 			for (int i = 0 ; i < state.mono + state.bold + state.italic + state.smallcaps ; i++)
 				fputs_unlocked(SPAN_END_TAG, output);
@@ -92,7 +125,7 @@ void process(FILE * input, FILE * output) {
 			state.paragraph = 0;
 			state.title_level = 0;
 			if ((next != '#') && (next != '~')) {
-				fputs_unlocked(PARAGRAPH_START_TAG, output);
+				fputs_unlocked(state.code ? CODE_START_TAG : PARAGRAPH_START_TAG, output);
 				state.paragraph = 1;
 				if (state.italic)
 					fputs_unlocked(ITALIC_START_TAG, output);
@@ -131,8 +164,8 @@ void process(FILE * input, FILE * output) {
 			}
 			else fputc_unlocked('-', output);
 			break;
-		case '\\' :
-			fputc_unlocked(next, output);
+		case '\\' :	// After backslash, copy next character verbatim
+			fputs_unlocked(xmlify(next), output);
 			state.ignore_next = 1;
 			break;
 		default:
@@ -155,14 +188,14 @@ int main(int argc, char ** argv) {
 		puts("Usage : md2fodt <filename>");
 		return 1;
 	}
-	FILE * input = fopen(argv[1], "rb");
+	FILE * input = fopen(argv[1], "r");
 	if (!input) {
 		puts("Unable to open input file");
 		return 2;
 	}
 	char filename[256];
 	sprintf(filename, "%s.fodt", argv[1]);
-	FILE * output = fopen(filename, "wb");
+	FILE * output = fopen(filename, "w");
 	if (!output) {
 		puts("Unable to create output file");
 		fclose(input);
