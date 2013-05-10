@@ -159,7 +159,7 @@ void process(FILE * input, FILE * output) {
 				fputs_unlocked(LONG_DASH, output);
 			else if (state.last_was_break) {
 				fputs_unlocked(LONG_DASH, output);
-				fputs_unlocked(NON_BREAKING_SPACE, output);
+				fputs_unlocked(EN_SPACE, output);
 				state.ignore_next = 1;
 			}
 			else fputc_unlocked('-', output);

@@ -51,9 +51,9 @@
 	</style:style>
 	
 	<style:page-layout style:name="page">
-		<style:page-layout-properties fo:page-width="6in" fo:page-height="9in" style:num-format="1" style:print-orientation="portrait" fo:margin="0.6in" fo:margin-top="0.6in" fo:margin-bottom="0.5in" fo:margin-left="0.6in" fo:margin-right="0.6in" style:writing-mode="lr-tb" style:footnote-max-height="0cm"/>
+		<style:page-layout-properties fo:page-width="6in" fo:page-height="9in" style:num-format="1" style:print-orientation="portrait" fo:margin="0.6in" fo:margin-top="0.6in" fo:margin-bottom="0.4in" fo:margin-left="0.6in" fo:margin-right="0.6in" style:writing-mode="lr-tb" style:footnote-max-height="0cm"/>
 		<style:footer-style>
-			<style:header-footer-properties fo:min-height="0.15in" fo:margin-left="0in" fo:margin-right="0in" fo:margin-top="0.2in" style:dynamic-spacing="false"/>
+			<style:header-footer-properties fo:min-height="0.15in" fo:margin-left="0in" fo:margin-right="0in" fo:margin-top="0.1in" style:dynamic-spacing="false"/>
 		</style:footer-style>
 	</style:page-layout>
 </office:automatic-styles>
