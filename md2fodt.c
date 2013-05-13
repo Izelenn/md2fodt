@@ -1,15 +1,19 @@
 #include <stdio.h>
 #include "fodt.h"
 
+int fputc_unlocked(int c, FILE *stream);
+int fputs_unlocked(const char *s, FILE *stream);
+int fgetc_unlocked(FILE *stream);
+
 char c2s[2] = {0, 0};
 
-int is_special(char c) {
+inline int is_special(char c) {
 	if ((c == '!') || (c == '?') || (c == ':') || (c == ';'))
 		return 1;
 	return 0;
 }
 
-char * xmlify(char c) {
+inline char * xmlify(char c) {
 	switch(c) {
 		case '&' :
 			return "&amp;";
@@ -36,13 +40,12 @@ void process(FILE * input, FILE * output) {
 		int title_level;
 		int double_quote;
 		int single_quote;
-		int last_was_break;
-		int last_was_space;
 		int paragraph;
 		int code;
 		int ignore_next;
-	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-	char current, next;
+	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	char current, next, last;
+	int i;
 	// Copy XML header
 	FILE * header = fopen(HEADER, "r");
 	while ((current = (char)fgetc_unlocked(header)) != -1)
@@ -54,6 +57,7 @@ void process(FILE * input, FILE * output) {
 	// Ignore next character after some commands
 		if (state.ignore_next) {
 			state.ignore_next = 0;
+			last = current;
 			current = next;
 			continue;
 		}
@@ -66,7 +70,7 @@ void process(FILE * input, FILE * output) {
 				fputs_unlocked(CODE_START_TAG, output);
 			}
 			else
-				fputs_unlocked(xmlify(current));
+				fputs_unlocked(xmlify(current), output);
 			current = next;
 			continue;
 		}
@@ -118,8 +122,7 @@ void process(FILE * input, FILE * output) {
 			}
 			break;
 		case '\n' :	// Line break : new paragraph
-			state.last_was_break = 1;
-			for (int i = 0 ; i < state.mono + state.bold + state.italic + state.smallcaps ; i++)
+			for (i = 0 ; i < state.mono + state.bold + state.italic + state.smallcaps ; i++)
 				fputs_unlocked(SPAN_END_TAG, output);
 			fputs_unlocked(PARAGRAPH_END_TAG, output);
 			state.paragraph = 0;
@@ -138,7 +141,6 @@ void process(FILE * input, FILE * output) {
 			}
 			break;
 		case ' ' :	// Space
-			state.last_was_space = 1;
 			if (is_special(next))
 				fputs_unlocked(NON_BREAKING_SPACE, output);
 			else fputc_unlocked(' ', output);
@@ -155,9 +157,9 @@ void process(FILE * input, FILE * output) {
 			fputs_unlocked("&amp;", output);
 			break;
 		case '-' :	// Smart dashes
-			if (state.last_was_space)
+			if (last == ' ')
 				fputs_unlocked(LONG_DASH, output);
-			else if (state.last_was_break) {
+			else if (last == '\n') {
 				fputs_unlocked(LONG_DASH, output);
 				fputs_unlocked(EN_SPACE, output);
 				state.ignore_next = 1;
@@ -170,11 +172,11 @@ void process(FILE * input, FILE * output) {
 			break;
 		default:
 			fputc_unlocked(current, output);
-			state.last_was_space = 0;
-			state.last_was_break = 0;
+			break;
 		}
-		if ((next == '\'') && (!(state.last_was_break || state.last_was_space)))
+		if ((next == '\'') && (!((last == '\n') || (last == ' '))))
 			state.single_quote = 1;
+		last = current;
 		current = next;
 	}
 	fputc_unlocked(current, output);
@@ -184,8 +186,8 @@ void process(FILE * input, FILE * output) {
 }
 
 int main(int argc, char ** argv) {
-	if (argc != 2) {
-		puts("Usage : md2fodt <filename>");
+	if (argc != 3) {
+		puts("Usage : md2fodt <input> <output>");
 		return 1;
 	}
 	FILE * input = fopen(argv[1], "r");
@@ -193,9 +195,7 @@ int main(int argc, char ** argv) {
 		puts("Unable to open input file");
 		return 2;
 	}
-	char filename[256];
-	sprintf(filename, "%s.fodt", argv[1]);
-	FILE * output = fopen(filename, "w");
+	FILE * output = fopen(argv[2], "w");
 	if (!output) {
 		puts("Unable to create output file");
 		fclose(input);
