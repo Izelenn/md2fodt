@@ -14,6 +14,9 @@ const char * TITLE_START_TAG[] = {"<text:p text:style-name=\"title1\">",
 const char PARAGRAPH_START_TAG[] = "<text:p text:style-name=\"text\">";
 const char CODE_START_TAG[] = "<text:p text:style-name=\"code\">";
 const char PARAGRAPH_END_TAG[] = "</text:p>\n";
+const char LINK_START_1[] = "<text:a xlink:type=\"simple\" xlink:href=\"";
+const char LINK_START_2[] = "\">";
+const char LINK_END_TAG[] = "</text:a>";
 const char SINGLE_QUOTE_START[] = {0xE2, 0x80, 0x98, 0};
 const char SINGLE_QUOTE_END[] = {0xE2, 0x80, 0x99, 0};
 const char DOUBLE_QUOTE_START[] = {0xE2, 0x80, 0x9C, 0};

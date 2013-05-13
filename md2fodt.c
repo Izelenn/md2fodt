@@ -6,6 +6,8 @@ int fputs_unlocked(const char *s, FILE *stream);
 int fgetc_unlocked(FILE *stream);
 
 char c2s[2] = {0, 0};
+char buffer[65536];
+char * text_buffer = buffer;
 
 inline int is_special(char c) {
 	if ((c == '!') || (c == '?') || (c == ':') || (c == ';'))
@@ -43,7 +45,9 @@ void process(FILE * input, FILE * output) {
 		int paragraph;
 		int code;
 		int ignore_next;
-	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		int hypertext;
+		int buffering;
+	} state = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	char current, next, last;
 	int i;
 	// Copy XML header
@@ -71,6 +75,21 @@ void process(FILE * input, FILE * output) {
 			}
 			else
 				fputs_unlocked(xmlify(current), output);
+			last = current;
+			current = next;
+			continue;
+		}
+		// Write link content to buffer
+		if (state.buffering) {
+			if (current == ']') {
+				state.buffering = 0;
+				*text_buffer = '\0';
+				text_buffer = buffer;
+			} else {
+				*text_buffer = current;
+				text_buffer++;
+			}
+			last = current;
 			current = next;
 			continue;
 		}
@@ -169,6 +188,25 @@ void process(FILE * input, FILE * output) {
 		case '\\' :	// After backslash, copy next character verbatim
 			fputs_unlocked(xmlify(next), output);
 			state.ignore_next = 1;
+			break;
+		case '[' :	// Hypertext
+			state.buffering = 1;
+			state.hypertext = 1;
+			break;
+		case '(' :	// End of hypertext, start of URL
+			if (state.hypertext) {
+				fputs_unlocked(LINK_START_1, output);
+			}
+			else fputc_unlocked('(', output);
+			break;
+		case ')' :	// End of URL
+			if (state.hypertext) {
+				fputs_unlocked(LINK_START_2, output);
+				fputs_unlocked(text_buffer, output);
+				fputs_unlocked(LINK_END_TAG, output);
+				state.hypertext = 0;
+			}
+			else fputc_unlocked(')', output);
 			break;
 		default:
 			fputc_unlocked(current, output);
