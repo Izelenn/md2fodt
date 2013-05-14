@@ -195,13 +195,13 @@ void process(FILE * input, FILE * output) {
 			break;
 		case '(' :	// End of hypertext, start of URL
 			if (state.hypertext) {
-				fputs_unlocked(LINK_START_1, output);
+				fputs_unlocked(LINK_START_TAG_BEGIN, output);
 			}
 			else fputc_unlocked('(', output);
 			break;
 		case ')' :	// End of URL
 			if (state.hypertext) {
-				fputs_unlocked(LINK_START_2, output);
+				fputs_unlocked(LINK_START_TAG_END, output);
 				fputs_unlocked(text_buffer, output);
 				fputs_unlocked(LINK_END_TAG, output);
 				state.hypertext = 0;
