@@ -143,7 +143,9 @@ void process(FILE * input, FILE * output) {
 		case '\n' :	// Line break : new paragraph
 			for (i = 0 ; i < state.mono + state.bold + state.italic + state.smallcaps ; i++)
 				fputs_unlocked(SPAN_END_TAG, output);
-			fputs_unlocked(PARAGRAPH_END_TAG, output);
+			if (state.title_level == 0)
+				fputs_unlocked(PARAGRAPH_END_TAG, output);
+			else fputs_unlocked(TITLE_END_TAG, output);
 			state.paragraph = 0;
 			state.title_level = 0;
 			if ((next != '#') && (next != '~')) {

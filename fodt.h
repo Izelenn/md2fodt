@@ -8,9 +8,16 @@ const char SCAPS_START_TAG[] = "<text:span text:style-name=\"smallcaps\">";
 const char SUP_START_TAG[] = "<text:span text:style-name=\"sup\">";
 const char SUB_START_TAG[] = "<text:span text:style-name=\"sub\">";
 const char SPAN_END_TAG[] = "</text:span>";
-const int  MAX_TITLE_LEVEL = 2;
-const char * TITLE_START_TAG[] = {"<text:p text:style-name=\"title1\">",
-				"<text:p text:style-name=\"title2\">"};
+const int  MAX_TITLE_LEVEL = 6;
+const char * TITLE_START_TAG[] = {
+	"<text:h text:style-name=\"title1\">",
+	"<text:h text:style-name=\"title2\">",
+	"<text:h text:style-name=\"title3\">",
+	"<text:h text:style-name=\"title4\">",
+	"<text:h text:style-name=\"title5\">",
+	"<text:h text:style-name=\"title6\">"
+};
+const char TITLE_END_TAG[] = "</text:h>";
 const char PARAGRAPH_START_TAG[] = "<text:p text:style-name=\"text\">";
 const char CODE_START_TAG[] = "<text:p text:style-name=\"code\">";
 const char PARAGRAPH_END_TAG[] = "</text:p>\n";
